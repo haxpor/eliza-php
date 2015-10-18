@@ -526,12 +526,72 @@ $elizaKeywords = [
 
 ];
 
-/* Exposed functions to get above variables from other classes. */
+$elizaInitials = [
+"How do you do.  Please tell me your problem.",
+// additions (not original)
+"Please tell me what's been bothering you.",
+"Is something troubling you ?"
+];
 
-// Return elizaKeywords by reference
-function &elizaKeywords() {
-	global $elizaKeywords;
-	return $elizaKeywords;
-}
+$elizaFinals = [
+"Goodbye.  It was nice talking to you.",
+// additions (not original)
+"Goodbye.  This was really a nice talk.",
+"Goodbye.  I'm looking forward to our next session.",
+"This was a good session, wasn't it -- but time is over now.   Goodbye.",
+"Maybe we could discuss this moreover in our next session ?   Goodbye."
+];
+
+$elizaQuits = [
+"bye",
+"goodbye",
+"done",
+"exit",
+"quit"
+];
+
+$elizaPres = [
+"dont", "don't",
+"cant", "can't",
+"wont", "won't",
+"recollect", "remember",
+"recall", "remember",
+"dreamt", "dreamed",
+"dreams", "dream",
+"maybe", "perhaps",
+"certainly", "yes",
+"machine", "computer",
+"machines", "computer",
+"computers", "computer",
+"were", "was",
+"you're", "you are",
+"i'm", "i am",
+"same", "alike",
+"identical", "alike",
+"equivalent", "alike"
+];
+
+$elizaPosts = [
+"am", "are",
+"your", "my",
+"me", "you",
+"myself", "yourself",
+"yourself", "myself",
+"i", "you",
+"you", "I",
+"my", "your",
+"i'm", "you are"
+];
+
+$elizaSynons = [
+"be" => ["am", "is", "are", "was"],
+"belief" => ["feel", "think", "believe", "wish"],
+"cannot" => ["can't"],
+"desire" => ["want", "need"],
+"everyone" => ["everybody", "nobody", "noone"],
+"family" => ["mother", "mom", "father", "dad", "sister", "brother", "wife", "children", "child"],
+"happy" => ["elated", "glad", "better"],
+"sad" => ["unhappy", "depressed", "sick"]
+];
 
 ?>
