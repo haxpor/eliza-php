@@ -103,9 +103,54 @@ class ElizaBot
 				{
 					// consult https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec for documentation on this section.
 					$sp = ($synPatterns[$m[1][0]]) ? synPatterns[$m[1][0]] : $m[1][0];
-					$r[0] = substr($r[0], 0, $m[0][1]).$sp.substr($r[0], $m[0][1] + strlen($m[0][0]);
+					$r[0] = substr($r[0], 0, $m[0][1]-1).$sp.substr($r[0], $m[0][1] + strlen($m[0][0]));
 					preg_match($sre, $r[0], $m, PREG_OFFSET_CAPTURE);
 				}
+				// expand asterisk expressions (v.1.1: work around lambda function)
+				if(preg_match($are3, $r[0]))
+				{
+					$r[0] = '\\s*(.*)\s*';
+				}
+				else
+				{
+					preg_match($are, $r[0], $m, PREG_OFFSET_CAPTURE);
+					if($m)
+					{
+						$lp = '';
+						$rp = $r[0];
+						while($m)
+						{
+							$lp .= substr($rp, 0, $m[0][1]);
+							if ($m[1][0] != ')')
+								$lp .= '\\b';
+							$lp .= '\\s*(.*)\\s*';
+							if (($m[2][0] != '(') && ($m[2][0] != '\\'))
+								$lp .= '\\b';
+							$lp .= m[2][0];
+							$rp = substr($rp, $m[0][1] + strlen($m[0][0]));
+							preg_match($are, $rp, $m, PREG_OFFSET_CAPTURE);
+						}
+						$r[0] = $lp.$rp;
+					}
+					preg_match($are1, $r[0], $m, PREG_OFFSET_CAPTURE);
+					if($m)
+					{
+						$lp = '\\s*(.*)\\s*';
+						if (($m[1][0] != ')') && ($m[1][0] != '\\'))
+							$lp .= '\\b';
+						$r[0] = $lp.substr($r[0], $m[0][1]-1+strlen($m[0][0]));
+					}
+					preg_match($are2, $r[0], $m, PREG_OFFSET_CAPTURE);
+					if(m)
+					{
+						$lp = substr($r[0], 0, $m[0][1]);
+						if ($m[1][0] != '(')
+							$lp .= '\\b';
+						$r[0] = $lp.'\\s*(.*)\\s*';
+					}
+				}
+				// expand white space
+				$r[0] = preg_replace($wsre, '\\s+', $r[0]);
 			}
 		}
 	}
