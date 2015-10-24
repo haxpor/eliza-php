@@ -76,8 +76,62 @@ class ElizaBot
 		$are3='/^\s*\*\s*$/';
 		$wsre='/\s+/g';
 
-		// ...
+		for($k=0; $k<count($elizaKeywords); $k++)
+		{
+			$rules = $elizaKeywords[$k][2];
+			$elizaKeywords[$k][3] = $k;	// save original index for sorting
+			for($i=0; $i<count($rules); $i++)
+			{
+				$r = $rules[$i];
+				// check mem flag and store it as decomp's elements 2
+				if($r[0][0] == '$')
+				{
+					$ofs = 1;
+					while($r[0][$ofs] == ' ')
+						$ofs++;
+					$r[0] = substr($r[0], $ofs);
+					$r[2] = true;
+				}
+				else
+				{
+					$r[2] = false;
+				}
+
+				// expand synonyms (v.1.1: work around lambda function)
+				preg_match($sre, $r[0], $m, PREG_OFFSET_CAPTURE);
+				while($m)
+				{
+					// consult https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec for documentation on this section.
+					$sp = ($synPatterns[$m[1][0]]) ? synPatterns[$m[1][0]] : $m[1][0];
+					$r[0] = substr($r[0], 0, $m[0][1]).$sp.substr($r[0], $m[0][1] + strlen($m[0][0]);
+					preg_match($sre, $r[0], $m, PREG_OFFSET_CAPTURE);
+				}
+			}
+		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ?>
