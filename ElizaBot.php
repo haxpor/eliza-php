@@ -218,6 +218,33 @@ class ElizaBot
 			return 0;
 	}
 
+	function _memSave($t)
+	{
+		$this->mem[] = $t;
+		if(count($this->mem) > $this->memSize)
+			array_shift($this->mem);
+	}
+
+	function _memGet()
+	{
+		if(count($this->mem))
+		{
+			if($this->noRandom)
+				return array_shift($this->mem);
+			else
+			{
+				$n = floor(Util::randomFloat() * count($this->mem));
+				$rpl = $this->mem[$n];
+				for($i=$n+1; $i<count($this->mem); $i++)
+					$this->mem[$i-1] = $this->mem[$i];
+				array_pop($this->mem);
+				return $rpl;
+			}
+		}
+		else
+			return '';
+	}
+
 	function getFinal()
 	{
 		global $elizaFinals;
@@ -227,7 +254,9 @@ class ElizaBot
 
 	function getInitial() 
 	{
+		global $elizaInitials;
 
+		return $elizaInitials[floor(Util::randomFloat() * count($elizaInitials))];
 	}
 }
 
