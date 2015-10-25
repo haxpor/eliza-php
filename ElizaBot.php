@@ -1,6 +1,6 @@
 <?php
 
-require "Utility.php";
+require "Util.php";
 require "ElizaConfigs.php";
 
 class ElizaBot
@@ -20,7 +20,7 @@ class ElizaBot
 	protected $preExp;
 
 	function ElizaBot($noRandomFlag=false) {
-		echoln("construct ElizaBot");
+		Util::echoln("construct ElizaBot");
 
 		$this->noRandom = ($noRandomFlag) ? true : false;
 		$this->capitalizeFirstLetter = true;
@@ -32,11 +32,11 @@ class ElizaBot
 	}
 
 	function __destruct() {
-		echoln("destruct ElizaBot");
+		Util::echoln("destruct ElizaBot");
 	}
 
 	function reset() {
-		echoln("called reset()");
+		Util::echoln("called reset()");
 
 		global $elizaKeywords;
 
@@ -53,7 +53,7 @@ class ElizaBot
 	}
 
 	function _init() {
-		echoln("called _init()");
+		Util::echoln("called _init()");
 
 		global $elizaSynons;
 		global $elizaKeywords;
@@ -108,7 +108,7 @@ class ElizaBot
 				while($m)
 				{
 					// consult https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec for documentation on this section.
-					$sp = ($synPatterns[$m[1][0]]) ? synPatterns[$m[1][0]] : $m[1][0];
+					$sp = $synPatterns[$m[1][0]] ? $synPatterns[$m[1][0]] : $m[1][0];
 					$r[0] = substr($r[0], 0, $m[0][1]-1).$sp.substr($r[0], $m[0][1] + strlen($m[0][0]));
 					preg_match($sre, $r[0], $m, PREG_OFFSET_CAPTURE);
 				}
@@ -132,7 +132,7 @@ class ElizaBot
 							$lp .= '\\s*(.*)\\s*';
 							if (($m[2][0] != '(') && ($m[2][0] != '\\'))
 								$lp .= '\\b';
-							$lp .= m[2][0];
+							$lp .= $m[2][0];
 							$rp = substr($rp, $m[0][1] + strlen($m[0][0]));
 							preg_match($are, $rp, $m, PREG_OFFSET_CAPTURE);
 						}
@@ -216,6 +216,18 @@ class ElizaBot
 			return -1;
 		else
 			return 0;
+	}
+
+	function getFinal()
+	{
+		global $elizaFinals;
+
+		return $elizaFinals[floor(Util::randomFloat() * count($elizaFinals))];
+	}
+
+	function getInitial() 
+	{
+
 	}
 }
 
