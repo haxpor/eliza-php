@@ -218,6 +218,19 @@ class ElizaBot
 			return 0;
 	}
 
+	function _getRuleIndexByKey($key)
+	{
+		global $elizaKeywords;
+
+		for($k=0; $k < count($elizaKeywords); $k++)
+		{
+			if($elizaKeywords[$k][0] == $key)
+				return $k;
+		}
+
+		return -1;
+	}
+
 	function _memSave($t)
 	{
 		$this->mem[] = $t;
