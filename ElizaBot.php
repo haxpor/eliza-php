@@ -15,6 +15,9 @@ class ElizaBot
 	protected $quit;
 	protected $mem = [];
 	protected $lastChoice = [];
+	protected $pres = [];
+	protected $posts = [];
+	protected $preExp;
 
 	function ElizaBot($noRandomFlag=false) {
 		echoln("construct ElizaBot");
@@ -54,6 +57,9 @@ class ElizaBot
 
 		global $elizaSynons;
 		global $elizaKeywords;
+		global $elizaPres;
+		global $elizaPosts;
+		global $elizaQuits;
 
 		// parse data and convert it from canonical form to internal use
 		// prodoce synonym list
@@ -153,6 +159,63 @@ class ElizaBot
 				$r[0] = preg_replace($wsre, '\\s+', $r[0]);
 			}
 		}
+		// now sort keywords by rank (highest first)
+		sort($elizaKeywords, "self::_sortKeywords");
+		// and compose regexps and refs for pres and posts
+		if($elizaPres && count($elizaPres))
+		{
+			$a = [];
+			for($i = 0; $i < count($elizaPres); $i+=2)
+			{
+				$a[] = $elizaPres[i];
+				$this->pres[$elizaPres[$i]] = $elizaPres[$i+1];
+			}
+			$this->preExp = '\\b('.join('|', $a).')\\b';
+		}
+		else
+		{
+			// default (should not match)
+			$this->preExp = '/####/';
+			$this->pres['####'] = '####';
+		}
+		if($elizaPosts && count($elizaPosts))
+		{
+			$a = [];
+			for($i=0; $i<count($elizaPosts); $i+=2)
+			{
+				$a[] = $elizaPosts[i];
+				$this->posts[$elizaPosts[i]] = $elizaPosts[i+1];
+			}
+			$this->postExp = '\\b('.join('|', $a).')\\b';
+		}
+		else
+		{
+			// default (should not match)
+			$this->postExp = '/####/';
+			$this->posts['####'] = '####';
+		}
+		// check for elizaQuits and install default if missing
+		if (!isset($elizaQuits))
+		{
+			$elizaQuits = [];
+		}
+		// done
+		$this->_dataParsed = true;
+	}
+
+	function _sortKeywords($a, $b) {
+		// sort by rank
+		if($a[1] > $b[1])
+			return -1;
+		else if($a[1] < $b[1])
+			return 1;
+		// or original index
+		else if($a[3] > $b[3])
+			return 1;
+		else if($a[3] < $b[3])
+			return -1;
+		else
+			return 0;
 	}
 }
 
