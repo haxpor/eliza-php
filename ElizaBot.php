@@ -218,6 +218,30 @@ class ElizaBot
 			return 0;
 	}
 
+	function _postTransform($s)
+	{
+		global $elizaPostTransforms;
+
+		// final cleanings
+		$s = preg_replace('/\s{2,}/g', ' ', $s);
+		$s = preg_replace('/\s+\./g', '.', $s);
+		if( $elizaPostTransforms && count($elizaPostTransforms) )
+		{
+			for($i=0; $i<count($elizaPostTransforms); $i+=2)
+			{
+				$s = preg_replace($elizaPostTransforms[i], $elizaPostTransforms[$i+1], $s);
+			}
+		}
+		// capitalize first char (v.1.1: work around lambda function)
+		if($this->capitalizeFirstLetter)
+		{
+			$re = '/^([a-z])/';
+			if(preg_match($re, $s, $m))
+				$s = strtoupper($m[0]).substr($s, 1);
+		}
+		return $s;
+	}
+
 	function _getRuleIndexByKey($key)
 	{
 		global $elizaKeywords;
