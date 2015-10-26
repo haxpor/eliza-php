@@ -18,6 +18,7 @@ class ElizaBot
 	protected $pres = [];
 	protected $posts = [];
 	protected $preExp;
+	protected $sentence;
 
 	function ElizaBot($noRandomFlag=false) {
 		Util::echoln("construct ElizaBot");
@@ -216,6 +217,81 @@ class ElizaBot
 			return -1;
 		else
 			return 0;
+	}
+
+	function transform($text) 
+	{
+		global $elizaQuits;
+		global $elizaKeywords;
+
+		$rpl = '';
+		$this->quit = false;
+		// unify text string
+		$text = strtolower($text);
+		$text = preg_replace('/@#\$%\^&\*\(\)_\+=~`\{\[\}\]\|:;<>\/\\\t/g', ' ', $text);
+		$text = preg_replace('/\s+-+\s+/g', '.', $text);
+		$text = preg_replace('/\s*[,\.\?!;]+\s*/g', '.', $text);
+		$text = preg_replace('/\s*\bbut\b\s*/g', '.', $text);
+		$text = preg_replace('/\s{2,}/g', ' ', $text);
+		
+		// split text in part sentences and loop through them
+		$parts = explode('.', $text);
+		for($i=0; $i<count($parts); $i++)
+		{
+			$part = $parts[$i];
+			if($part != '')
+			{
+				// check for quit expression
+				for ($q=0; $q<count($elizaQuits); $q++)
+				{
+					if($elizaQuits[$q] == $part)
+					{
+						$this->quit = true;
+						return $this->getFinal();
+					}
+				}
+
+				// preprocess (v.1.1: work around lambda function)
+				preg_match($this->preExp, $part, $m, PREG_OFFSET_CAPTURE);
+				if($m)
+				{
+					$lp ='';
+					$rp = $part;
+					while($m)
+					{
+						$lp .= substr($rp, 0, $m[0][1]-1).$this->pres[$m[1]];
+						$rp = substr($rp, $m[0][1]+count($m[0]));
+						preg_match($this->preExp, $rp, $m, PREG_OFFSET_CAPTURE);
+					}
+					$part = $lp.$rp;
+				}
+				$this->sentence = $part;
+
+				// loop through keywords
+				for($k = 0; $k<count($elizaKeywords); $k++)
+				{
+					if(preg_match('/\\b'.$elizaKeywords[$k][0].'\\b/i', $part))
+					{
+						$rpl = $this->_execRule($k);
+					}
+					if($rpl != '')
+						return $rpl;
+				}
+			}
+		}
+
+		// nothing matched try mem
+		$rpl = $this._memGet();
+		// if nothing in mem, so try xnone
+		if($rpl == '')
+		{
+			$this->sentence = ' ';
+			$k = $this->_getRuleIndexByKey('xnone');
+			if($k >= 0)
+				$rpl = $this->_execRule($k);
+		}
+		// return reply or default string
+		return ($rpl != '') ? $rpl : 'I am at ta loss for words.';
 	}
 
 	function _postTransform($s)
