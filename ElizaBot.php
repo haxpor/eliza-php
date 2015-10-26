@@ -81,7 +81,7 @@ class ElizaBot
 		$are1='/^\s*\*\s*(\S)/';
 		$are2='/(\S)\s*\*\s*$/';
 		$are3='/^\s*\*\s*$/';
-		$wsre='/\s+/g';
+		$wsre='/\s+/';
 
 		for($k=0; $k<count($elizaKeywords); $k++)
 		{
@@ -228,11 +228,11 @@ class ElizaBot
 		$this->quit = false;
 		// unify text string
 		$text = strtolower($text);
-		$text = preg_replace('/@#\$%\^&\*\(\)_\+=~`\{\[\}\]\|:;<>\/\\\t/g', ' ', $text);
-		$text = preg_replace('/\s+-+\s+/g', '.', $text);
-		$text = preg_replace('/\s*[,\.\?!;]+\s*/g', '.', $text);
-		$text = preg_replace('/\s*\bbut\b\s*/g', '.', $text);
-		$text = preg_replace('/\s{2,}/g', ' ', $text);
+		$text = preg_replace('/@#\$%\^&\*\(\)_\+=~`\{\[\}\]\|:;<>\/\\\t/', ' ', $text);
+		$text = preg_replace('/\s+-+\s+/', '.', $text);
+		$text = preg_replace('/\s*[,\.\?!;]+\s*/', '.', $text);
+		$text = preg_replace('/\s*\bbut\b\s*/', '.', $text);
+		$text = preg_replace('/\s{2,}/', ' ', $text);
 		
 		// split text in part sentences and loop through them
 		$parts = explode('.', $text);
@@ -294,13 +294,95 @@ class ElizaBot
 		return ($rpl != '') ? $rpl : 'I am at ta loss for words.';
 	}
 
+	function _execRule($k)
+	{
+		global $elizaKeywords;
+
+		$rule = $elizaKeywords[$k];
+		$decomps = $rule[2];
+		$paramre = '/\(([0-9]+)\)/';
+		for($i=0; $i<count($decomps); $i++)
+		{
+			preg_match_all('/'.$decomps[$i][0].'/', $this->sentence, $m);
+			if ($m) {
+				$reasmbs = $decomps[$i][1];
+				$memflag = $decomps[$i][2];
+				$ri = $this->noRandom ? 0 : floor(Util::randomFloat() * count($reasmbs));
+				if( ($this->noRandom && $this->lastChoice[$k][$i] > $ri) || $this->lastChoice[$k][$i] == $ri )
+				{
+					$ri = ++$this->lastChoice[$k][$i];
+					if($ri >= count($reasmbs))
+					{
+						$ri = 0;
+						$this->lastChoice[$k][$i] = -1;
+					}
+				}
+				else
+				{
+					$this->lastChoice[$k][$i] = $ri;
+				}
+
+				$rpl = $reasmbs[$ri];
+				if($this->debug)
+					Util::echoln('match:\nkey: '.$elizaKeywords[$k][0].
+								 '\nrank: '.$elizaKeywords[$k][1].
+								 '\ndecomp: '.$decomps[$i][0].
+								 '\nreasmb: '.$rpl.
+								 '\nmemflag: '.$memflag);
+				if(preg_match('/^goto/i', $rpl))
+				{
+					$ki = $this->_getRuleIndexByKey(substr($rpl, 5));
+					if($ki>=0)
+						return $this->_execRule($ki);
+				}
+
+				// substitute positional params (v.1.1: work around lambda function)
+				preg_match($paramre, $rpl, $m1, PREG_OFFSET_CAPTURE);
+				if($m1)
+				{
+					$lp = '';
+					$rp = $rpl;
+					while($m1)
+					{
+						$param = $m[0][intval($m1[1])];
+						// postprocess param
+						preg_match($this->postExp, $param, $m2, PREG_OFFSET_CAPTURE);
+						if($m2)
+						{
+							$lp2 = '';
+							$rp2 = $param;
+							while($m2)
+							{
+								$lp2 .= substr($rp2, 0, $m2[0][1]-1).$this->posts[$m2[1][1]];
+								$rp2 = substr($rp2, $m2[0][1] + strlen($m2[0][0]));
+								preg_match($this->postExp, $rp2, $m2, PREG_OFFSET_CAPTURE);
+							}
+							$param = $lp2.$rp2;
+						}
+						$lp .= substr($rp, 0, $m1[0][1]-1).$param;
+						$rp = substr($rp, $m1[0][1] + strlen($m1[0][0]));
+						preg_match($paramre, $rp, $m1, PREG_OFFSET_CAPTURE);
+					}
+					$rpl = $lp.$rp;
+				}
+				$rpl = $this->_postTransform($rpl);
+				if(memflag)
+					$this->_memSave($rpl);
+				else
+					return $rpl;
+			}
+		}
+
+		return '';
+	}
+
 	function _postTransform($s)
 	{
 		global $elizaPostTransforms;
 
 		// final cleanings
-		$s = preg_replace('/\s{2,}/g', ' ', $s);
-		$s = preg_replace('/\s+\./g', '.', $s);
+		$s = preg_replace('/\s{2,}/', ' ', $s);
+		$s = preg_replace('/\s+\./', '.', $s);
 		if( $elizaPostTransforms && count($elizaPostTransforms) )
 		{
 			for($i=0; $i<count($elizaPostTransforms); $i+=2)
